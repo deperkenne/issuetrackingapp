@@ -1,0 +1,37 @@
+{
+  "issues" : [ {
+    "id" : "i1",
+    "name" : "Motivate project members",
+    "description" : "Drink a beer.",
+    "severity" : "TRIVIAL",
+    "type" : "FEATURE",
+    "state" : "OPEN",
+    "milestone" : {
+      "id" : "m1",
+      "name" : "Project Kickoff",
+      "dueIssues" : [ "i1" ]
+    },
+    "dependencies" : [ ]
+  }, {
+    "id" : "i2",
+    "name" : "Fix A1234",
+    "description" : "Fix networking bug A1234: Possible race conditions on login",
+    "severity" : "MAJOR",
+    "type" : "BUG",
+    "state" : "CLOSED",
+    "dependencies" : [ ]
+  }, {
+    "id" : "i3",
+    "name" : "Login screen",
+    "description" : "Build a shiny login screen",
+    "severity" : "MAJOR",
+    "type" : "FEATURE",
+    "state" : "OPEN",
+    "dependencies" : [ ]
+  } ],
+  "milestones" : [ "m1", {
+    "id" : "m6",
+    "name" : "mmm",
+    "dueIssues" : [ "i3" ]
+  } ]
+}

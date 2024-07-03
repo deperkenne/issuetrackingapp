@@ -1,0 +1,113 @@
+import com.github.victools.jsonschema.generator.Option;
+import com.github.victools.jsonschema.generator.OptionPreset;
+import com.github.victools.jsonschema.generator.SchemaGenerator;
+import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
+import com.github.victools.jsonschema.generator.SchemaVersion;
+import com.github.victools.jsonschema.module.jackson.JacksonModule;
+import com.github.victools.jsonschema.module.jackson.JacksonOption;
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath group: 'com.github.victools', name: 'jsonschema-generator', version: '4.33.1'
+		classpath group: 'com.github.victools', name: 'jsonschema-module-jackson', version: '4.33.1'
+	}
+}
+
+plugins {
+    id 'java'
+    id 'application'
+	id 'idea'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+	jacksonVersion = '2.16.2'
+}
+
+dependencies {
+	implementation 'com.networknt:json-schema-validator:1.4.0'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}'
+	implementation group: 'org.slf4j', name: 'slf4j-nop', version: '2.0.7'
+
+	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
+	testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
+}
+
+
+
+test {
+    useJUnitPlatform()
+}
+
+run {
+    standardInput = System.in
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+    test {
+    	java {
+    		srcDirs = ['src/test/java']
+    	}
+    	resources {
+    		srcDirs = ['src/test/resources']
+    	}
+    }
+}
+
+
+def rootClassName = 'de.perceverance.ke.tcho.fo.assignment2.issuetracking.model.Project'
+
+def classDirectory = file("build/classes/java/main")
+def schemaDirectory = file("src/main/resources")
+
+tasks.register('generateSchema') {
+	group = "jsontools"
+	description = "Generate a JSON schema from annotated Java classes"
+	dependsOn 'compileJava'
+
+	doLast {
+		schemaDirectory.mkdirs()
+		def schemaFile = file("$schemaDirectory/schema.json")
+
+		// Create a URLClassLoader with the classDirectory as the classpath
+		URL[] urls = [classDirectory.toURI().toURL()]
+		URLClassLoader urlClassLoader = new URLClassLoader(urls, this.getClass().getClassLoader())
+
+		// Load the Film class using the URLClassLoader
+		Class<?> rootClass = urlClassLoader.loadClass("$rootClassName")
+
+		// Configure JSON schema generator
+		def module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED, JacksonOption.RESPECT_JSONPROPERTY_ORDER, JacksonOption.FLATTENED_ENUMS_FROM_JSONPROPERTY, JacksonOption.JSONIDENTITY_REFERENCE_ALWAYS_AS_ID)
+		def config = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
+				.with(module)
+				.with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
+				.build()
+		def generator = new SchemaGenerator(config)
+
+		// Generate JSON schema
+		def jsonSchema = generator.generateSchema(rootClass)
+		def jsonSchemaAsString = jsonSchema.toPrettyString()
+		println jsonSchemaAsString
+
+		// Write the generated JSON schema to the file
+		schemaFile.text = jsonSchemaAsString
+	}
+}
+
+// Define the main class for the application
+mainClassName = 'de.perceverance.ke.tcho.fo.assignment2.Main'
